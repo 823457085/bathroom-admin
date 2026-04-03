@@ -9,6 +9,7 @@ type Config struct {
 	Database DatabaseConfig `yaml:"database"`
 	App      AppConfig      `yaml:"app"`
 	JWT      JWTConfig      `yaml:"jwt"`
+	WxPay    WxPayConfig    `yaml:"wxpay"`
 }
 
 type DatabaseConfig struct {
@@ -28,6 +29,13 @@ type AppConfig struct {
 type JWTConfig struct {
 	Secret      string `yaml:"secret"`
 	ExpireHours int    `yaml:"expire_hours"`
+}
+
+type WxPayConfig struct {
+	AppID     string `yaml:"app_id"`
+	MchID     string `yaml:"mch_id"`
+	APIKey    string `yaml:"api_key"`
+	NotifyURL string `yaml:"notify_url"`
 }
 
 var GlobalConfig *Config

@@ -114,6 +114,19 @@ func (r *OrderRepository) FindByID(id int64) (*Order, error) {
 	return &o, nil
 }
 
+func (r *OrderRepository) FindByOrderNo(orderNo string) (*Order, error) {
+	row := r.db.QueryRow(
+		"SELECT id, order_no, user_id, address_id, total_amount, status, remark, created_at, updated_at FROM orders WHERE order_no = ?",
+		orderNo,
+	)
+	var o Order
+	err := row.Scan(&o.ID, &o.OrderNo, &o.UserID, &o.AddressID, &o.TotalAmount, &o.Status, &o.Remark, &o.CreatedAt, &o.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &o, nil
+}
+
 func (r *OrderRepository) FindItemsByOrderID(orderID int64) ([]OrderItem, error) {
 	rows, err := r.db.Query(
 		"SELECT id, order_id, product_id, product_name, price, quantity, subtotal, created_at FROM order_items WHERE order_id = ?",

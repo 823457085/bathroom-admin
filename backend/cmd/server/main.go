@@ -52,6 +52,20 @@ func main() {
 	orderRepo := model.NewOrderRepository(db)
 	orderHandler := handler.NewOrderHandler(orderRepo, cartRepo, addressRepo)
 
+	// Phase 2 handlers
+	var wxpayHandler *handler.WxPayHandler
+	if cfg.WxPay.AppID != "" && cfg.WxPay.MchID != "" {
+		wxpayHandler = handler.NewWxPayHandler(orderRepo, cfg.WxPay.AppID, cfg.WxPay.MchID, cfg.WxPay.APIKey)
+	}
+
+	memberRepo := model.NewMemberRepository(db)
+	memberHandler := handler.NewMemberHandler(memberRepo)
+
+	analyticsHandler := handler.NewAnalyticsHandler(db)
+
+	aftersaleRepo := model.NewAftersaleRepository(db)
+	aftersaleHandler := handler.NewAftersaleHandler(aftersaleRepo)
+
 	if cfg.App.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -123,6 +137,40 @@ func main() {
 			orders.GET("", orderHandler.List)
 			orders.GET("/:id", orderHandler.Detail)
 			orders.POST("/:id/cancel", orderHandler.Cancel)
+		}
+
+		// Phase 2: wxpay
+		if wxpayHandler != nil {
+			v1.POST("/wxpay/unified", wxpayHandler.UnifiedOrder)
+			v1.POST("/wxpay/notify", wxpayHandler.Notify)
+		}
+
+		// Phase 2: member
+		member := v1.Group("/member")
+		member.Use(authMiddleware.RequireAuth())
+		{
+			member.GET("/profile", memberHandler.GetProfile)
+			member.GET("/levels", memberHandler.GetLevels)
+			member.POST("/claim-coupon", memberHandler.ClaimCoupon)
+		}
+
+		// Phase 2: analytics (admin)
+		analytics := v1.Group("/analytics")
+		analytics.Use(authMiddleware.RequireAuth())
+		{
+			analytics.GET("/dashboard", analyticsHandler.Dashboard)
+			analytics.GET("/sales-trend", analyticsHandler.SalesTrend)
+			analytics.GET("/top-products", analyticsHandler.TopProducts)
+		}
+
+		// Phase 2: aftersale
+		aftersale := v1.Group("/aftersales")
+		aftersale.Use(authMiddleware.RequireAuth())
+		{
+			aftersale.POST("", aftersaleHandler.Create)
+			aftersale.GET("", aftersaleHandler.List)
+			aftersale.GET("/all", aftersaleHandler.ListAll) // admin
+			aftersale.PUT("/:id", aftersaleHandler.Handle)  // admin handle
 		}
 	}
 

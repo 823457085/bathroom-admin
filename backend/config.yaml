@@ -13,3 +13,9 @@ app:
 jwt:
   secret: bathroom-admin-jwt-secret-change-in-production
   expire_hours: 72
+
+wxpay:
+  app_id: YOUR_WECHAT_APP_ID
+  mch_id: YOUR_WECHAT_MCH_ID
+  api_key: YOUR_WECHAT_API_KEY
+  notify_url: https://your-domain.com/api/v1/wxpay/notify
