@@ -43,6 +43,15 @@ func main() {
 	productRepo := model.NewProductRepository(db)
 	productHandler := handler.NewProductHandler(productRepo)
 
+	cartRepo := model.NewCartRepository(db)
+	cartHandler := handler.NewCartHandler(cartRepo, productRepo)
+
+	addressRepo := model.NewAddressRepository(db)
+	addressHandler := handler.NewAddressHandler(addressRepo)
+
+	orderRepo := model.NewOrderRepository(db)
+	orderHandler := handler.NewOrderHandler(orderRepo, cartRepo, addressRepo)
+
 	if cfg.App.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -88,6 +97,32 @@ func main() {
 			products.POST("", authMiddleware.RequireAuth(), productHandler.Create)
 			products.PUT("/:id", authMiddleware.RequireAuth(), productHandler.Update)
 			products.DELETE("/:id", authMiddleware.RequireAuth(), productHandler.Delete)
+		}
+
+		cart := v1.Group("/cart")
+		cart.Use(authMiddleware.RequireAuth())
+		{
+			cart.GET("", cartHandler.List)
+			cart.POST("", cartHandler.Add)
+			cart.PUT("/:item_id", cartHandler.UpdateQuantity)
+			cart.DELETE("/:item_id", cartHandler.Remove)
+		}
+
+		addresses := v1.Group("/addresses")
+		addresses.Use(authMiddleware.RequireAuth())
+		{
+			addresses.GET("", addressHandler.List)
+			addresses.POST("", addressHandler.Create)
+			addresses.PUT("/:id/default", addressHandler.SetDefault)
+		}
+
+		orders := v1.Group("/orders")
+		orders.Use(authMiddleware.RequireAuth())
+		{
+			orders.POST("", orderHandler.Create)
+			orders.GET("", orderHandler.List)
+			orders.GET("/:id", orderHandler.Detail)
+			orders.POST("/:id/cancel", orderHandler.Cancel)
 		}
 	}
 
