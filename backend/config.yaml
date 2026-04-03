@@ -1,0 +1,15 @@
+database:
+  host: 127.0.0.1
+  port: 3306
+  user: bathroom
+  password: bathroom123
+  name: bathroom_admin
+
+app:
+  host: 0.0.0.0
+  port: 8080
+  mode: debug
+
+jwt:
+  secret: bathroom-admin-jwt-secret-change-in-production
+  expire_hours: 72
